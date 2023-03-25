@@ -1,2 +1,3 @@
 # blue_ros2_bridge
-ROS2 bridging nodes for the Beaglebone Blue control software
+
+A bridging package connecting the Beaglebone Blue with ROS2.
