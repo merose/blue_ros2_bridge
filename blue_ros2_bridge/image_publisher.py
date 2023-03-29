@@ -1,9 +1,14 @@
 from blue_ros2_bridge.util import BaseNode
 
+import cv2 as cv
+
+import numpy as np
+
 import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import CompressedImage
+from sensor_msgs.msg import Image
 
 import zmq
 
@@ -21,7 +26,7 @@ class ImagePublisher(BaseNode):
                                                default='camera_link')
 
         self.image_pub = self.node.create_publisher(
-            CompressedImage, 'camera/image_compressed', 10)
+            Image, 'camera/image', 10)
 
         context = zmq.Context()
         self.sock = context.socket(zmq.REQ)
@@ -37,11 +42,18 @@ class ImagePublisher(BaseNode):
         })
         image = self.sock.recv_pyobj()
 
-        msg = CompressedImage()
+        raw = np.frombuffer(image['data'], dtype=np.uint8)
+        frame = cv.imdecode(raw, cv.IMREAD_UNCHANGED)
+
+        msg = Image()
         msg.header.stamp = self.stamp_from_time(image['time'])
         msg.header.frame_id = self.camera_frame
-        msg.format = 'jpeg'
-        msg.data = image['data']
+        msg.height = image['shape'][0]
+        msg.width = image['shape'][1]
+        msg.encoding = 'bgr8'
+        msg.is_bigendian = False
+        msg.step = msg.width * image['shape'][2]
+        msg.data = frame.tobytes()
         self.image_pub.publish(msg)
 
 
