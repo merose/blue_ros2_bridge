@@ -20,7 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'image_publisher = blue_ros2_bridge.image_publisher:main',
+            'mobility_commander = blue_ros2_bridge.mobility_commander:main',
+            'robot_monitor = blue_ros2_bridge.robot_monitor:main',
+            'image_publisher = blue_ros2_bridge.image_publisher:main'
         ],
     },
 )

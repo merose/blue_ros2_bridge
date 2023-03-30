@@ -18,8 +18,8 @@ class ImagePublisher(BaseNode):
     def __init__(self, node):
         super().__init__(node)
 
-        self.image_host = self.get_parameter('image_host')
-        self.image_port = self.get_parameter('image_port', default=10002)
+        self.server_host = self.get_parameter('server_host')
+        self.server_port = self.get_parameter('server_port', default=10002)
         self.jpeg_quality = self.get_parameter('jpeg_quality', default=95)
         self.frame_rate = self.get_parameter('frame_rate', default=2)
         self.camera_frame = self.get_parameter('camera_frame',
@@ -30,7 +30,7 @@ class ImagePublisher(BaseNode):
 
         context = zmq.Context()
         self.sock = context.socket(zmq.REQ)
-        self.sock.connect(f'tcp://{self.image_host}:{self.image_port}')
+        self.sock.connect(f'tcp://{self.server_host}:{self.server_port}')
 
         self.node.create_timer(1/self.frame_rate, self.publish_image)
 
