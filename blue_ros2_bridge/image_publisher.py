@@ -1,3 +1,5 @@
+from threading import Thread
+
 from blue_ros2_bridge.util import BaseNode
 
 import cv2 as cv
@@ -29,19 +31,18 @@ class ImagePublisher(BaseNode):
             Image, 'camera/image', 10)
 
         context = zmq.Context()
-        self.sock = context.socket(zmq.REQ)
+        self.sock = context.socket(zmq.SUB)
+        self.sock.set_string(zmq.SUBSCRIBE, '')
         self.sock.connect(f'tcp://{self.server_host}:{self.server_port}')
 
-        self.node.create_timer(1/self.frame_rate, self.publish_image)
+        Thread(target=self.receive_images).start()
 
-    def publish_image(self):
-        self.log_info('Retrieving image')
-        self.sock.send_json({
-            'time': self.get_time(),
-            'quality': self.jpeg_quality
-        })
-        image = self.sock.recv_pyobj()
+    def receive_images(self):
+        while True:
+            image = self.sock.recv_pyobj()
+            self.publish_image(image)
 
+    def publish_image(self, image):
         raw = np.frombuffer(image['data'], dtype=np.uint8)
         frame = cv.imdecode(raw, cv.IMREAD_UNCHANGED)
 
@@ -55,6 +56,8 @@ class ImagePublisher(BaseNode):
         msg.step = msg.width * image['shape'][2]
         msg.data = frame.tobytes()
         self.image_pub.publish(msg)
+        delay = image["time"] - self.get_time()
+        self.log_info(f'Published image: time={image["time"]} delay={delay}')
 
 
 def main():
