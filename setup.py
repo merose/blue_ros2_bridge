@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             'mobility_commander = blue_ros2_bridge.mobility_commander:main',
             'robot_monitor = blue_ros2_bridge.robot_monitor:main',
-            'image_publisher = blue_ros2_bridge.image_publisher:main'
+            'image_publisher = blue_ros2_bridge.image_publisher:main',
+            'image_writer = blue_ros2_bridge.image_writer:main',
         ],
     },
 )
