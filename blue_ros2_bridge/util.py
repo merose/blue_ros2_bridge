@@ -1,6 +1,7 @@
 from builtin_interfaces.msg import Time
 
 from rclpy.parameter import Parameter
+from rclpy.time import Time
 
 from rcl_interfaces.msg import ParameterDescriptor
 
@@ -43,16 +44,20 @@ class BaseNode:
         self.node.declare_parameter(name, value=default, descriptor=descriptor)
         self._parameters.add(name)
 
-    def get_parameter(self, name, value_type=None, default=None,
+    def get_parameter(self, name, default=None, value_type=None, 
                       description=''):
         if name not in self._parameters:
             self.declare_parameter(name, value_type=value_type,
                                    default=default, description=description)
         python_type = self.get_value_type(value_type, default)
-        parameter_value = self.node.get_parameter(name).get_parameter_value()
-        return self._PARAMETER_CONVERSIONS[python_type](parameter_value) \
-            if python_type in self._PARAMETER_CONVERSIONS \
-            else parameter_value.string_value
+        parameter = self.node.get_parameter_or(name)
+        if parameter.type_ == Parameter.Type.NOT_SET:
+            return default
+        else:
+            parameter_value = parameter.get_parameter_value()
+            return self._PARAMETER_CONVERSIONS[python_type](parameter_value) \
+                if python_type in self._PARAMETER_CONVERSIONS \
+                   else parameter_value.string_value
 
     def get_value_type(self, value_type, default):
         return value_type if value_type is not None \
@@ -70,6 +75,9 @@ class BaseNode:
 
     def log_error(self, msg):
         self.node.get_logger().error(msg)
+
+    def ros_time_from_stamp(self, stamp):
+        return Time.from_msg(stamp)
 
     def time_from_stamp(self, stamp):
         return stamp.sec + stamp.nanosec/1E9

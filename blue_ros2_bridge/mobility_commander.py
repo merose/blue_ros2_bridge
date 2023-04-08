@@ -1,5 +1,3 @@
-import struct
-
 from blue_ros2_bridge.util import BaseNode
 
 from diff_drive_interfaces.msg import WheelTicks
@@ -26,8 +24,7 @@ class MobilityCommander(BaseNode):
                                       self.on_rates, 10)
 
     def on_rates(self, msg):
-        msg = struct.pack('<ii', msg.left, msg.right)
-        self.sock.send(msg)
+        self.sock.send_json({'left': msg.left, 'right': msg.right})
 
 
 def main():
