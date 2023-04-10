@@ -10,7 +10,6 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import CompressedImage
-from sensor_msgs.msg import Image
 
 import zmq
 
@@ -28,7 +27,7 @@ class ImagePublisher(BaseNode):
                                                default='camera_link')
 
         self.image_pub = self.node.create_publisher(
-            Image, 'camera/image', 10)
+            CompressedImage, 'image/compressed', 10)
 
         context = zmq.Context()
         self.sock = context.socket(zmq.SUB)
@@ -39,25 +38,17 @@ class ImagePublisher(BaseNode):
 
     def receive_images(self):
         while True:
-            image = self.sock.recv_pyobj()
-            self.publish_image(image)
+            msg = self.sock.recv_multipart()
+            self.publish_image(msg[0])
 
-    def publish_image(self, image):
-        raw = np.frombuffer(image['data'], dtype=np.uint8)
-        frame = cv.imdecode(raw, cv.IMREAD_UNCHANGED)
-
-        msg = Image()
-        msg.header.stamp = self.stamp_from_time(image['time'])
+    def publish_image(self, data):
+        msg = CompressedImage()
+        msg.header.stamp = self.get_stamp() #self.stamp_from_time(image['time'])
         msg.header.frame_id = self.camera_frame
-        msg.height = image['shape'][0]
-        msg.width = image['shape'][1]
-        msg.encoding = 'bgr8'
-        msg.is_bigendian = False
-        msg.step = msg.width * image['shape'][2]
-        msg.data = frame.tobytes()
+        msg.data = data
         self.image_pub.publish(msg)
-        delay = image["time"] - self.get_time()
-        self.log_info(f'Published image: time={image["time"]} delay={delay}')
+        delay = 0 #image["time"] - self.get_time()
+        self.log_info(f'Published image: time={msg.header.stamp} delay={delay}')
 
 
 def main():

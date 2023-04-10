@@ -25,6 +25,7 @@ setup(
             'image_publisher = blue_ros2_bridge.image_publisher:main',
             'image_writer = blue_ros2_bridge.image_writer:main',
             'servo_commander = blue_ros2_bridge.servo_commander:main',
+            'image_viewer = blue_ros2_bridge.image_viewer:main',
         ],
     },
 )
