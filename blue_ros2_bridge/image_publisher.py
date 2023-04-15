@@ -45,6 +45,7 @@ class ImagePublisher(BaseNode):
         msg = CompressedImage()
         msg.header.stamp = self.get_stamp() #self.stamp_from_time(image['time'])
         msg.header.frame_id = self.camera_frame
+        msg.format = 'jpeg'
         msg.data = data
         self.image_pub.publish(msg)
         delay = 0 #image["time"] - self.get_time()
